@@ -197,6 +197,84 @@ app.get('/api/orders/:orderId', async (req, res) => {
   }
 });
 
+// Delete restaurant
+app.delete('/api/restaurants/:id', async (req, res) => {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+    
+    const result = await db.collection('restaurants').deleteOne({ _id: new ObjectId(id) });
+    
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Restaurant not found'
+      });
+    }
+
+    // Also delete associated menu items
+    await db.collection('menu_items').deleteMany({ restaurantId: new ObjectId(id) });
+
+    res.json({
+      success: true,
+      message: 'Restaurant deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting restaurant:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to delete restaurant' 
+    });
+  }
+});
+
+// Delete menu item
+app.delete('/api/menu-items/:id', async (req, res) => {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+    
+    const result = await db.collection('menu_items').deleteOne({ _id: new ObjectId(id) });
+    
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Menu item not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Menu item deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting menu item:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to delete menu item' 
+    });
+  }
+});
+
+app.get('/api/menu-items', async (req, res) => {
+  try {
+    const db = getDb();
+    const menuItems = await db.collection('menu_items').find().toArray();
+    
+    res.json({
+      success: true,
+      data: menuItems,
+      count: menuItems.length
+    });
+  } catch (error) {
+    console.error('Error fetching menu items:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch menu items' 
+    });
+  }
+});
+
 // ===== RIDE SHARING ROUTES =====
 
 // Book a new ride
@@ -276,7 +354,7 @@ app.post('/api/rides', async (req, res) => {
   }
 });
 
-// Get all rides (for admin/testing)
+// Get all rides (for admin)
 app.get('/api/rides', async (req, res) => {
   try {
     const db = getDb();
@@ -393,14 +471,118 @@ app.patch('/api/rides/:id/status', async (req, res) => {
   }
 });
 
+// Get all raiders (for admin dashboard)
+app.get('/api/raiders', async (req, res) => {
+  try {
+    const db = getDb();
+    const raiders = await db.collection('raiders').find().toArray();
+    
+    res.json({
+      success: true,
+      data: raiders,
+      count: raiders.length
+    });
+  } catch (error) {
+    console.error('Error fetching raiders:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch raiders' 
+    });
+  }
+});
+
+// Add new raider
+app.post('/api/raiders', async (req, res) => {
+  try {
+    const db = getDb();
+    const raiderData = {
+      ...req.body,
+      status: "available",
+      isActive: true,
+      totalDeliveries: 0,
+      rating: 0,
+      joinedDate: new Date(),
+      lastActive: new Date()
+    };
+
+    const result = await db.collection('raiders').insertOne(raiderData);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Raider added successfully',
+      data: { ...raiderData, _id: result.insertedId }
+    });
+  } catch (error) {
+    console.error('Error adding raider:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to add raider' 
+    });
+  }
+});
+
+// Update raider
+app.put('/api/raiders/:id', async (req, res) => {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+    
+    const result = await db.collection('raiders').updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { ...req.body, lastActive: new Date() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Raider not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Raider updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating raider:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update raider' 
+    });
+  }
+});
+
+// Delete raider
+app.delete('/api/raiders/:id', async (req, res) => {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+    
+    const result = await db.collection('raiders').deleteOne(
+      { _id: new ObjectId(id) }
+    );
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Raider not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Raider deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting raider:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to delete raider' 
+    });
+  }
+});
+
 // ===== ERROR HANDLING =====
-// app.use('*', (req, res) => {
-//   res.status(404).json({
-//     success: false,
-//     error: 'Route not found',
-//     path: req.originalUrl
-//   });
-// });
 
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', error);
