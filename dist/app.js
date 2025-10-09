@@ -521,10 +521,4 @@ app.use((error, req, res, next) => {
         error: 'Internal server error'
     });
 });
-// Start server
-app.listen(PORT, () => {
-    console.log(`🚗 RideBite Server running on port ${PORT}`);
-    console.log(`🍕 Food Delivery API ready`);
-    console.log(`📡 API available at: http://localhost:${PORT}`);
-});
 exports.default = app;
