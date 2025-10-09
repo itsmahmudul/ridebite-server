@@ -592,11 +592,4 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚗 RideBite Server running on port ${PORT}`);
-  console.log(`🍕 Food Delivery API ready`);
-  console.log(`📡 API available at: http://localhost:${PORT}`);
-});
-
 export default app;
