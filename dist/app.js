@@ -521,4 +521,7 @@ app.use((error, req, res, next) => {
         error: 'Internal server error'
     });
 });
+app.listen(PORT, () => {
+    console.log(`🚗 RideBite Server running on port ${PORT}`);
+});
 exports.default = app;
