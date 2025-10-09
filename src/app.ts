@@ -592,4 +592,8 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
   });
 });
 
+app.listen(PORT, () => {
+  console.log(`🚗 RideBite Server running on port ${PORT}`);
+});
+
 export default app;
